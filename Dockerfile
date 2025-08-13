@@ -1,6 +1,5 @@
 # Use an official Python runtime as the base image
 FROM python:3.9-slim
-#hello this is for commitssss
 # Set the working directory in the container
 WORKDIR /app
 
