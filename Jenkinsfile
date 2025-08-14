@@ -1,64 +1,48 @@
 @Library("Shared") _
-pipeline{
-    
-    agent { label "dev"};
-    
-    stages{
-        stage("Code Clone"){
-            steps{
-               script{
-                   clone("https://github.com/LondheShubham153/two-tier-flask-app.git", "master")
-               }
-            }
-        }
-        stage("Trivy File System Scan"){
-            steps{
-                script{
-                    trivy_fs()
+pipeline {
+    agent { label "vinod" }
+
+    stages {
+        stage("Hello") {
+            steps {
+                script {
+                    hello()
                 }
             }
         }
-        stage("Build"){
-            steps{
-                sh "docker build -t two-tier-flask-app ."
-            }
-            
-        }
-        stage("Test"){
-            steps{
-                echo "Developer / Tester tests likh ke dega..."
-            }
-            
-        }
-        stage("Push to Docker Hub"){
-            steps{
-                script{
-                    docker_push("dockerHubCreds","two-tier-flask-app")
-                }  
-            }
-        }
-        stage("Deploy"){
-            steps{
-                sh "docker compose up -d --build flask-app"
-            }
-        }
-    }
 
-post{
-        success{
-            script{
-                emailext from: 'mentor@trainwithshubham.com',
-                to: 'mentor@trainwithshubham.com',
-                body: 'Build success for Demo CICD App',
-                subject: 'Build success for Demo CICD App'
+        stage("Clone Code") {
+            steps {
+                script {
+                    clone("https://github.com/zaidu000/two-tier-flask-app.git", "main")
+                }
             }
         }
-        failure{
-            script{
-                emailext from: 'mentor@trainwithshubham.com',
-                to: 'mentor@trainwithshubham.com',
-                body: 'Build Failed for Demo CICD App',
-                subject: 'Build Failed for Demo CICD App'
+
+        stage("Build Docker Image") {
+            steps {
+                script {
+                    build("notes-app", "latest", "zaidu000")
+                }
+            }
+        }
+
+        stage("Push to Docker Hub") {
+            steps {
+                script {
+                    push(
+                        imageName: "zaidu000/notes-app",
+                        imageTag: "latest",
+                        credentials: "DockerHubCred"
+                    )
+                }
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                echo "Deploying container with DB environment variables..."
+                sh "docker compose up -d"
             }
         }
     }
